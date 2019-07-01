@@ -177,6 +177,66 @@ Function DisableAppSuggestions {
 	}
 }
 
+Function DisableWindowsTips{
+    Write-Output "Disabling Windows Tip"
+    $RegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
+    $Name = "DisableSoftLanding"
+    $Value = "1"
+    $Type = "DWORD"
+
+    Set-Location HKLM:
+    if (!(test-Path .\SOFTWARE\Policies\Microsoft\Windows\CloudContent)) {New-Item .\SOFTWARE\Policies\Microsoft\Windows\CloudContent}
+    try {
+        New-ItemProperty -Path $RegPath -Name $Name -Value $Value -PropertyType $Type -Force -ErrorAction Stop
+        Write-Output "SUCCESS: disabled Windows Tips"
+    }
+    catch {
+        Write-Output "ERROR: Unsable to disable Windows Tips: $_"
+    }
+    Set-Location $PSScriptRoot
+}
+
+Function RemoveApps
+{
+    If ($AppsToRemove){
+        If (!(Test-Path $AppsToRemove)){Write-Output "ERROR: Could not find $AppsToRemove"}
+        $AppsList = Get-Content $AppsToRemove
+    }
+
+    If (!($AppsToRemove)){$AppsList = Get-AppxProvisionedPackage -online | where-object {$_.displayname -notlike "*Store*" -and $_.displayname -notlike "*Calculator*" -and $_.displayname -notlike "*Windows.Photos*" -and $_.displayname -notlike "*SoundRecorder*"  -and $_.displayname -notlike "*MSPaint*" -and $_.displayname -notlike "*ZuneVideo*" -and $_.displayname -notlike "*BingWeather*" -and $_.displayname -notlike "*sticky*" }}
+        #Removes some windows apps
+    Foreach ($item in $AppsList){
+        $Name = $item.Displayname | Out-String
+        Write-Output "Attemptng to remove $Name Provisioned Package"
+        try {
+            Remove-AppxProvisionedPackage -Online -PackageName $item.PackageName -ErrorAction Stop
+            Write-Output "SUCCESS: $name Provisioned Package was succefully removed"
+        } catch {
+            Write-Output "Could not remove $name Provisioned Package, will retry: $_"
+            try {
+                Remove-AppxProvisionedPackage -Online -PackageName $item.PackageName -ErrorAction Stop
+                Add-LogEntry "SUCCESS: Retry for removal of $name Provisioned Pakcage was succefull"
+            } catch {
+                Write-Output "ERROR: Could not remove $Name Provisioned Package: $_"
+            }
+        }
+
+        Write-Output "Attemptng to remove $Name Package"
+        try {
+            Get-AppxPackage -AllUsers -Name $Item.DisplayName | Remove-AppxPackage -ErrorAction Stop
+            Write-Output "SUCCESS: $Name package was succefully removed"
+        } catch {
+            Write-Output "$Name package was not removed, will retry: $_"
+            try {
+                Get-AppxPackage -AllUsers -Name $Item.DisplayName | Remove-AppxPackage -ErrorAction Stop
+                Write-Output "SUCCESS: $Name package was succefully removed"
+            } catch {
+                Write-Output "ERROR: $Name package was not removed: $_"
+            }
+        }
+    }
+}
+
 # Enable Application suggestions and automatic installation
 Function EnableAppSuggestions {
 	Write-Output "Enabling Application suggestions..."
@@ -320,6 +380,39 @@ Function DisableAdvertisingID {
 		New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" | Out-Null
 	}
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Name "DisabledByGroupPolicy" -Type DWord -Value 1
+}
+
+Function DisableAds{
+    $reglocation = "HKCU"
+    #Start menu ads
+    Write-Output 'Disabling Start Menu Ads for Current User'
+    Reg Add "$reglocation\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /T REG_DWORD /V "SystemPaneSuggestionsEnabled" /D 0 /F
+    #Lock Screen suggestions
+    Write-Output 'Disabling Lock Screen Suggentions for Current User'
+    Reg Add "$reglocation\SOFTWARE\Microsoft\CurrentVersion\ContentDeliveryManager" /T REG_DWORD /V "SoftLandingEnabled" /D 0 /F
+    Write-Output "Disabling explorer ads for current user"
+    Reg Add "$reglocation\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /T REG_DWORD /V "ShowSyncProviderNotifications" /D 0 /F
+
+    $reglocation = "HKLM\AllProfile"
+    reg load "$reglocation" c:\users\default\ntuser.dat
+    IF ($LASTEXITCODE -ne 0) {Write-Output "Could not mount default user profile reg hive"}
+    IF ($LASTEXITCODE -eq 0){
+        Write-Output 'Disabling Start Menu Ads for default user'
+        Reg Add "$reglocation\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /T REG_DWORD /V "SystemPaneSuggestionsEnabled" /D 0 /F
+        IF ($LASTEXITCODE -ne 0) {Write-Output "ERROR: Could not disable Start Menu Ads for default user"} Else {Write-Output -LogMessage "SUCCESS: Disabled Start Menu Ads for default user"}
+
+        Write-Output 'Disabling Lock Screen Suggentions for Current User'
+        Reg Add "$reglocation\SOFTWARE\Microsoft\CurrentVersion\ContentDeliveryManager" /T REG_DWORD /V "SoftLandingEnabled" /D 0 /F
+        IF ($LASTEXITCODE -ne 0) {Write-Output "ERROR: Could not disable Lock Screen Suggentions for Current User"}Else {Write-Output -LogMessage "SUCCESS: Disabled Lock Screen Suggentions for Current User"}
+
+        Write-Output "Disabling explorer ads for default user"
+        Reg Add "$reglocation\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /T REG_DWORD /V "ShowSyncProviderNotifications" /D 0 /F
+        IF ($LASTEXITCODE -ne 0) {Write-Output "ERROR: Could not disable explorer ads for default user"}Else {Write-Output -LogMessage "SUCCESS: Disabled explorer ads for default user"}
+        #unload default user hive
+        [gc]::collect()
+        reg unload "$reglocation"
+        IF ($LASTEXITCODE -ne 0) {Write-Output "ERROR: Could not dismount default user reg hive"}
+    }
 }
 
 # Enable Advertising ID
@@ -2970,6 +3063,17 @@ Function DisableXboxFeatures {
 }
 
 # Enable Xbox features - Not applicable to Server
+Function DisableXboxServices{
+    Write-Output "Disabling Xbox Services"
+    try {
+        Get-Service XblAuthManager -ErrorAction Stop | stop-service -passthru -ErrorAction Stop | set-service -startuptype disabled -ErrorAction Stop
+        Write-Output "SUCCESS: Disabled Xbox Services"
+    }catch {
+        Write-Output "ERROR: Unable to Disable Xbox Services: $_"
+    }
+}
+
+# Enable Xbox features
 Function EnableXboxFeatures {
 	Write-Output "Enabling Xbox features..."
 	Get-AppxPackage -AllUsers "Microsoft.XboxApp" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}

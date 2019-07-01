@@ -8,6 +8,12 @@
 ### Require administrator privileges ###
 RequireAdmin
 
+### Custom ###
+DisableWindowsTips
+RemoveApps
+DisableAds
+DisableXboxServices
+
 ### Privacy Tweaks ###
 DisableTelemetry                # EnableTelemetry
 DisableWiFiSense                # EnableWiFiSense
@@ -16,7 +22,7 @@ DisableWebSearch                # EnableWebSearch
 DisableAppSuggestions           # EnableAppSuggestions
 DisableActivityHistory          # EnableActivityHistory
 DisableBackgroundApps           # EnableBackgroundApps
-# DisableSensors                # EnableSensors
+DisableSensors                  # EnableSensors
 DisableLocation                 # EnableLocation
 DisableMapUpdates               # EnableMapUpdates
 DisableFeedback                 # EnableFeedback
@@ -77,10 +83,10 @@ EnableRemoteDesktop             # DisableRemoteDesktop
 DisableAutoplay                 # EnableAutoplay
 DisableAutorun                  # EnableAutorun
 # DisableRestorePoints          # EnableRestorePoints
-# EnableStorageSense            # DisableStorageSense
+DisableStorageSense             # EnableStorageSense
 # DisableDefragmentation        # EnableDefragmentation
-# DisableSuperfetch             # EnableSuperfetch
-# DisableIndexing               # EnableIndexing
+DisableSuperfetch               # EnableSuperfetch
+DisableIndexing                 # EnableIndexing
 # DisableSwapFile               # EnableSwapFile
 EnableNTFSLongPaths             # DisableNTFSLongPaths
 # DisableNTFSLastAccess         # EnableNTFSLastAccess
@@ -108,7 +114,7 @@ HideTaskView                    # ShowTaskView
 ShowSmallTaskbarIcons           # ShowLargeTaskbarIcons
 SetTaskbarCombineWhenFull       # SetTaskbarCombineNever        # SetTaskbarCombineAlways
 HideTaskbarPeopleIcon           # ShowTaskbarPeopleIcon
-ShowTrayIcons                   # HideTrayIcons
+HideTrayIcons                   # ShowTrayIcons
 DisableSearchAppInStore         # EnableSearchAppInStore
 DisableNewAppPrompt             # EnableNewAppPrompt
 # HideRecentlyAddedApps         # ShowRecentlyAddedApps
@@ -120,7 +126,7 @@ SetVisualFXPerformance          # SetVisualFXAppearance
 # EnableTitleBarColor           # DisableTitleBarColor
 # EnableDarkTheme               # DisableDarkTheme
 # AddENKeyboard                 # RemoveENKeyboard
-# EnableNumlock                 # DisableNumlock
+EnableNumlock                   # DisableNumlock
 # DisableEnhPointerPrecision    # EnableEnhPointerPrecision
 # SetSoundSchemeNone            # SetSoundSchemeDefault
 # DisableStartupSound           # EnableStartupSound
@@ -186,11 +192,11 @@ DisableEdgeShortcutCreation     # EnableEdgeShortcutCreation
 DisableIEFirstRun               # EnableIEFirstRun
 DisableFirstLogonAnimation      # EnableFirstLogonAnimation
 DisableMediaSharing             # EnableMediaSharing
-# UninstallMediaPlayer          # InstallMediaPlayer
+UninstallMediaPlayer            # InstallMediaPlayer
 # UninstallInternetExplorer     # InstallInternetExplorer
 # UninstallWorkFolders          # InstallWorkFolders
 # UninstallPowerShellV2         # InstallPowerShellV2
-# InstallLinuxSubsystem         # UninstallLinuxSubsystem
+InstallLinuxSubsystem           # UninstallLinuxSubsystem
 # InstallHyperV                 # UninstallHyperV
 # InstallNET23                  # UninstallNET23
 SetPhotoViewerAssociation       # UnsetPhotoViewerAssociation
